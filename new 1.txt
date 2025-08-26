@@ -1,0 +1,295 @@
+// Dropdown control on change
+// Year picker
+Set(
+    varYears,
+    Year(Dropdown1.Selected.Value)
+);
+// Building quarters
+With(
+    {
+        varQuarters: Table(
+            {
+                Q: 1,
+                Start: Date(
+                    varYears,
+                    1,
+                    1
+                ),
+                Finish: Date(
+                    varYears,
+                    4,
+                    1
+                )
+            },
+            {
+                Q: 2,
+                Start: Date(
+                    varYears,
+                    4,
+                    1
+                ),
+                Finish: Date(
+                    varYears,
+                    7,
+                    1
+                )
+            },
+            {
+                Q: 3,
+                Start: Date(
+                    varYears,
+                    7,
+                    1
+                ),
+                Finish: Date(
+                    varYears,
+                    10,
+                    1
+                )
+            },
+            {
+                Q: 4,
+                Start: Date(
+                    varYears,
+                    10,
+                    1
+                ),
+                Finish: Date(
+                    varYears + 1,
+                    1,
+                    1
+                )
+            }
+        )
+    },
+    // Clear collection with Gallery data
+    ClearCollect(
+        colChartData,
+        ForAll(
+            varQuarters,
+            {
+                Year: varYears,
+                Quarter: "Q" & Text(Q),
+                Rows: Filter(
+                    Gallery1.AllItems,
+                    Date >= Start && Date < Finish
+                )
+            }
+        )
+    )
+);
+// Setting variable to which builds for charts
+Set(
+    varJSON,
+    With(
+        {
+            q1rec: LookUp(
+                colChartData,
+                Quarter = "Q1"
+            ),
+            q2rec: LookUp(
+                colChartData,
+                Quarter = "Q2"
+            ),
+            q3rec: LookUp(
+                colChartData,
+                Quarter = "Q3"
+            ),
+            q4rec: LookUp(
+                colChartData,
+                Quarter = "Q4"
+            )
+        },
+        "{""labels"":[""Q1"",""Q2"",""Q3"",""Q4""],""datasets"":[{""label"":""Requests per Quarter"",""data"":[" & If(
+            IsBlank(q1rec),
+            0,
+            CountRows(q1rec.Rows)
+        ) & "," & If(
+            IsBlank(q2rec),
+            0,
+            CountRows(q2rec.Rows)
+        ) & "," & If(
+            IsBlank(q3rec),
+            0,
+            CountRows(q3rec.Rows)
+        ) & "," & If(
+            IsBlank(q4rec),
+            0,
+            CountRows(q4rec.Rows)
+        ) & "]}]}"
+    )
+);
+
+// TESTING BY MONTH
+
+// Year picker
+Set(varYears, Year(Dropdown1.Selected.Value));
+
+// Build months (fixed 12 buckets)
+With(
+    {
+        varMonths: Table(
+            { M: 1,  Start: Date(varYears, 1, 1),  Finish: Date(varYears, 2, 1),  Label: "Jan" },
+            { M: 2,  Start: Date(varYears, 2, 1),  Finish: Date(varYears, 3, 1),  Label: "Feb" },
+            { M: 3,  Start: Date(varYears, 3, 1),  Finish: Date(varYears, 4, 1),  Label: "Mar" },
+            { M: 4,  Start: Date(varYears, 4, 1),  Finish: Date(varYears, 5, 1),  Label: "Apr" },
+            { M: 5,  Start: Date(varYears, 5, 1),  Finish: Date(varYears, 6, 1),  Label: "May" },
+            { M: 6,  Start: Date(varYears, 6, 1),  Finish: Date(varYears, 7, 1),  Label: "Jun" },
+            { M: 7,  Start: Date(varYears, 7, 1),  Finish: Date(varYears, 8, 1),  Label: "Jul" },
+            { M: 8,  Start: Date(varYears, 8, 1),  Finish: Date(varYears, 9, 1),  Label: "Aug" },
+            { M: 9,  Start: Date(varYears, 9, 1),  Finish: Date(varYears,10, 1),  Label: "Sep" },
+            { M:10,  Start: Date(varYears,10, 1),  Finish: Date(varYears,11, 1),  Label: "Oct" },
+            { M:11,  Start: Date(varYears,11, 1),  Finish: Date(varYears,12, 1),  Label: "Nov" },
+            { M:12,  Start: Date(varYears,12, 1),  Finish: Date(varYears+1,1, 1), Label: "Dec" }
+        )
+    },
+    // Build collection exactly like your quarter version
+    ClearCollect(
+        colChartData,
+        ForAll(
+            varMonths,
+            {
+                Year: varYears,
+                Month: Label,
+                Rows: Filter(
+                    Gallery1.AllItems,
+                    Date >= Start && Date < Finish
+                )
+            }
+        )
+    )
+);
+
+// Build chart JSON with fixed labels + LookUp per month
+Set(
+    varJSONTest,
+    With(
+        {
+            jan: LookUp(colChartData, Month = "Jan"),
+            feb: LookUp(colChartData, Month = "Feb"),
+            mar: LookUp(colChartData, Month = "Mar"),
+            apr: LookUp(colChartData, Month = "Apr"),
+            may: LookUp(colChartData, Month = "May"),
+            jun: LookUp(colChartData, Month = "Jun"),
+            jul: LookUp(colChartData, Month = "Jul"),
+            aug: LookUp(colChartData, Month = "Aug"),
+            sep: LookUp(colChartData, Month = "Sep"),
+            oct: LookUp(colChartData, Month = "Oct"),
+            nov: LookUp(colChartData, Month = "Nov"),
+            dec: LookUp(colChartData, Month = "Dec")
+        },
+        "{""labels"":[""Jan"",""Feb"",""Mar"",""Apr"",""May"",""Jun"",""Jul"",""Aug"",""Sep"",""Oct"",""Nov"",""Dec""],""datasets"":[{""label"":""Requests per Month"",""data"":[" &
+            If(IsBlank(jan), 0, CountRows(jan.Rows)) & "," &
+            If(IsBlank(feb), 0, CountRows(feb.Rows)) & "," &
+            If(IsBlank(mar), 0, CountRows(mar.Rows)) & "," &
+            If(IsBlank(apr), 0, CountRows(apr.Rows)) & "," &
+            If(IsBlank(may), 0, CountRows(may.Rows)) & "," &
+            If(IsBlank(jun), 0, CountRows(jun.Rows)) & "," &
+            If(IsBlank(jul), 0, CountRows(jul.Rows)) & "," &
+            If(IsBlank(aug), 0, CountRows(aug.Rows)) & "," &
+            If(IsBlank(sep), 0, CountRows(sep.Rows)) & "," &
+            If(IsBlank(oct), 0, CountRows(oct.Rows)) & "," &
+            If(IsBlank(nov), 0, CountRows(nov.Rows)) & "," &
+            If(IsBlank(dec), 0, CountRows(dec.Rows)) &
+        "]}]}"
+    )
+);
+
+
+// TEST LINE CHART
+
+// Year picker
+Set(varYears, Year(Dropdown1.Selected.Value));
+
+// Build months
+With(
+    {
+        varMonths: Table(
+            { M: 1,  Start: Date(varYears, 1, 1),  Finish: Date(varYears, 2, 1),  Label: "January" },
+            { M: 2,  Start: Date(varYears, 2, 1),  Finish: Date(varYears, 3, 1),  Label: "February" },
+            { M: 3,  Start: Date(varYears, 3, 1),  Finish: Date(varYears, 4, 1),  Label: "March" },
+            { M: 4,  Start: Date(varYears, 4, 1),  Finish: Date(varYears, 5, 1),  Label: "April" },
+            { M: 5,  Start: Date(varYears, 5, 1),  Finish: Date(varYears, 6, 1),  Label: "May" },
+            { M: 6,  Start: Date(varYears, 6, 1),  Finish: Date(varYears, 7, 1),  Label: "June" },
+            { M: 7,  Start: Date(varYears, 7, 1),  Finish: Date(varYears, 8, 1),  Label: "July" },
+            { M: 8,  Start: Date(varYears, 8, 1),  Finish: Date(varYears, 9, 1),  Label: "August" },
+            { M: 9,  Start: Date(varYears, 9, 1),  Finish: Date(varYears,10, 1),  Label: "September" },
+            { M:10,  Start: Date(varYears,10, 1),  Finish: Date(varYears,11, 1),  Label: "October" },
+            { M:11,  Start: Date(varYears,11, 1),  Finish: Date(varYears,12, 1),  Label: "November" },
+            { M:12,  Start: Date(varYears,12, 1),  Finish: Date(varYears+1,1, 1), Label: "December" }
+        )
+    },
+    // Build collection with both Date-based and Created-based counts
+    ClearCollect(
+        colChartData,
+        ForAll(
+            varMonths,
+            {
+                Month: Label,
+                RowsDate: Filter(
+                    Gallery1.AllItems,
+                    Date >= Start && Date < Finish
+                ),
+                RowsCreated: Filter(
+                    Gallery1.AllItems,
+                    Created >= Start && Created < Finish
+                )
+            }
+        )
+    )
+);
+
+// Build chart JSON with two datasets
+Set(
+    varJSONTest2,
+    "{""labels"":[" &
+        Concat(colChartData, """" & Month & """", ",") &
+    "],""datasets"":[
+        {""label"":""Dataset 1"",""data"":[" &
+            Concat(colChartData, Text(CountRows(RowsDate)), ",") &
+        "],""backgroundColor"":""red""},
+        {""label"":""Dataset 2"",""data"":[" &
+            Concat(colChartData, Text(CountRows(RowsCreated)), ",") &
+        "],""backgroundColor"":""blue""}
+    ]}"
+);
+
+
+
+
+
+
+
+
+
+
+
+==== Line chart settings
+
+{
+    "responsive": true,
+    "maintainAspectRatio": false,
+    "plugins": {
+      "legend": {
+        "position": "top"
+      },
+      "title": {
+        "display": true,
+        "text": "Chart.js Line Chart"
+      }
+    }
+  }
+  
+  
+  ==== Bar chart settings
+  {
+    "responsive": true,
+    "maintainAspectRatio": false,
+    "scales": {
+      "y": {
+        "axis": "y",
+        "type": "linear",
+        "beginAtZero": true
+      }
+    }
+  }
